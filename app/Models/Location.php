@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Blog extends Model
+class Location extends Model
 {
     use HasFactory;
 
@@ -14,16 +14,10 @@ class Blog extends Model
 
     public function scopeFilters(Builder $query, array $filters)
     {
-        $query->when(
-            $filters['category'] ?? null,
-            fn (Builder $query, $category) =>
-            $query->where('category', $category)
-        );
-
         $query->when($filters['q'] ?? null, function (Builder $query, $search) {
             $query
-                ->where('judul', 'LIKE', "%" . $search . "%")
-                ->orWhere('body', 'LIKE', "%" . $search . "%");
+                ->where('nama_lokasi', 'LIKE', "%" . $search . "%")
+                ->orWhere('alamat', 'LIKE', "%" . $search . "%");
         });
     }
 }

@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\lokasi;
 use App\Http\Requests\StorelokasiRequest;
 use App\Http\Requests\UpdatelokasiRequest;
+use App\Models\Tempat;
 
 class LokasiController extends Controller
 {
 
-    
+
     /**
      * Display a listing of the resource.
      *
@@ -17,7 +18,7 @@ class LokasiController extends Controller
      */
     public function index()
     {
-        $lokasi = tempat::all();
+        $lokasi = Tempat::all();
         return view('admin\lokasi\viewlokasi', compact('lokasi'));
     }
 

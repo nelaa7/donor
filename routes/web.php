@@ -1,9 +1,14 @@
 <?php
-use App\Http\Controllers\StokController;
+
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\ButuhDarahController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LokasiiController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DonorController;
+use App\Http\Controllers\LocationController;
+use App\Http\Controllers\StockController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,26 +20,65 @@ use App\Http\Controllers\DonorController;
 | contains the "web" middleware group. Now create something great!
 |
 */
-Route::resource('stok', StokController::class);
 
-Route::get('/index', [DonorController::class,'index']);
+Route::middleware('auth')->group(function () {
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])
+            ->name('dashboard.index');
+        Route::resource('locations', LocationController::class);
+        Route::resource('stocks', StockController::class);
+        Route::resource('blogs', BlogController::class);
+        Route::resource('butuh-darahs', ButuhDarahController::class);
+    });
 
-Route::get('/login', [DonorController::class,'login']);
+    Route::middleware('role:user')->name('home.')->group(function () {
+    });
+    Route::middleware('role:user')->group(function () {
+    });
 
-Route::get('/blog', [DonorController::class,'blog']);
+    Route::delete('/logout', [AuthController::class, 'logout'])->name('auth.logout');
+});
 
-Route::get('single-blog1', [DonorController::class,'singleblog1']);
+Route::name('home.')->group(function () {
+    // Route::get('/', [HomeController::class, 'index'])->name('index');
+});
 
-Route::get('/single-blog2', [DonorController::class,'singleblog2']);
+Route::middleware('guest')->group(function () {
+    // auth
+    Route::get('/login', [AuthController::class, 'index'])->name('auth.login');
+    Route::post('/login', [AuthController::class, 'authenticate']);
 
-Route::get('/single-blog3', [DonorController::class,'singleblog3']);
+    Route::get('/register', [AuthController::class, 'register'])->name('auth.register');
+    Route::post('/register', [AuthController::class, 'registerPost']);
+});
 
 
-Route::get('/single-blog4', [DonorController::class,'singleblog4']);
 
-Route::get('/stok', [DonorController::class,'stok']);
 
-Route::get('/lokasi', [DonorController::class,'lokasi']);
+
+
+
+
+
+
+Route::get('/index', [DonorController::class, 'index']);
+
+// Route::get('/login', [DonorController::class, 'login']);
+
+Route::get('/blog', [DonorController::class, 'blog']);
+
+Route::get('single-blog1', [DonorController::class, 'singleblog1']);
+
+Route::get('/single-blog2', [DonorController::class, 'singleblog2']);
+
+Route::get('/single-blog3', [DonorController::class, 'singleblog3']);
+
+
+Route::get('/single-blog4', [DonorController::class, 'singleblog4']);
+
+Route::get('/stok', [DonorController::class, 'stok']);
+
+Route::get('/lokasi', [DonorController::class, 'lokasi']);
 
 
 Route::get('/contact', function () {
@@ -50,9 +94,9 @@ Route::get('/admin', function () {
     return view('admin/admin');
 });
 
-Route::get('/register', function () {
-    return view('register');
-});
+// Route::get('/register', function () {
+//     return view('register');
+// });
 
 Route::get('/forgot-password', function () {
     return view('forgot-password');
@@ -90,9 +134,9 @@ Route::resource('')
 Route::get('/addstok', [StokController::class,'index']); */
 
 ##Route::post('/store', [StokController::class,'store'])->name('store');
-Route::resource('/addstok', StokController::class);
+// Route::resource('/addstok', StokController::class);
 
-Route::resource('/blog', BlogController::class);
+// Route::resource('/blog', BlogController::class);
 
 // Route::get('/viewlokasi', [LokasiController::class, 'viewlokasi']);
 

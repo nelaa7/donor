@@ -4,120 +4,80 @@ namespace App\Http\Controllers;
 
 use App\Models\Blog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BlogController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        $data = Blog::orderBy('id', 'desc')->get();
-        return view('admin\blog\addblog')->with('data', $data);
+        return view('blogs.index', [
+            "title" => "Data Blog",
+            "blogs" => Blog::filters(request(['q', 'category']))->paginate(5)->withQueryString()
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create()
     {
-        return view('admin\blog\viewblog');
+        return view('blogs.create', [
+            "title" => "Tambah Data Blog Baru",
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
-        $data =[
-            'NamaBlog' =>$request->name,
-            'Gender' =>$request->gender,
-            'Tanggal'=>$request->dob,
-            'BeratBadan' =>$request->weight,
-            'Golongan_darah'=>$request->bloodgroup,
-            'Alamat'=>$request->address,
-            'NomerTelepon' =>$request->contact,
-            'Jumlah_darah' =>$request->bloodqty
-            
-        ];
-
-        Blog::create($data);
-        $data = Blog::orderBy('id', 'desc')->get();
-        return view('admin\blog\addblog')->with('data', $data);
-
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        $id = request('id');
-        // $data = stok::where('id', $id)->get();
-        return view('admin\blog\editblog',[
-            'data' => Blog::where('id', $id)->get()
+        $validatedData = $request->validate([
+            'judul' => 'required',
+            'category' => "required|string|max:30",
+            "thumbnail" => "required|image|file|max:5120",
+            'body' => 'required|max:5000',
         ]);
-        // dd($data);
+
+        Blog::create(array_merge($validatedData, [
+            "thumbnail" => $request->file('thumbnail')->store("blog-thumbnails"),
+        ]));
+
+        return redirect()
+            ->route('blogs.index')
+            ->with('success', 'Data Blog baru berhasil ditambahkan.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
+    public function show(Blog $blog)
     {
-        $id = request('id');
-        $data =[
-            'NamaBlog' =>$request->name,
-            'Gender' =>$request->gender,
-            'Tanggal'=>$request->dob,
-            'BeratBadan' =>$request->weight,
-            'Golongan_darah'=>$request->bloodgroup,
-            'Alamat'=>$request->address,
-            'NomerTelepon' =>$request->contact,
-            'Jumlah_darah' =>$request->bloodqty
-        ];
-
-        Blog::where('id', $id)->update($data);
-        return redirect()->to('blog')->with('succes', 'Berhasil melakukan update');
+        return view('blogs.show', [
+            "title" => "Detail Data Blog",
+            "blog" => $blog
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
+    public function edit(Blog $blog)
     {
-        $id = request('id');
-        // dd($id);
-        
-       Blog::destroy($id);
-        return redirect('blog');
+        return view('blogs.edit', [
+            "title" => "Edit Data Blog",
+            "blog" => $blog,
+        ]);
+    }
+
+    public function update(Request $request, Blog $blog)
+    {
+        $validatedData = $request->validate([
+            'judul' => 'required',
+            'category' => "required|string|max:30",
+            'body' => 'required|max:5000',
+            "thumbnail" => "sometimes|required|image|file|max:5120|nullable",
+        ]);
+
+        $blog->update(array_merge($validatedData, [
+            "thumbnail" => $this->uploadOrReturnDefault("thumbnail", $blog->thumbnail, 'blog-thumbnails'),
+        ]));
+
+        return redirect()->route('blogs.index')->with('success', 'Data Blog berhasil diubah.');
+    }
+
+    public function destroy(Blog $blog)
+    {
+        Storage::delete($blog->image);
+        $blog->delete();
+
+        return redirect()->route('blogs.index')->with('success', 'Data Blog berhasil dihapus.');
     }
 }
